@@ -56,7 +56,7 @@ def train_model(model, opt):
       if opt.checkpoint > 0 and ((time.time()-cptime)//60) // opt.checkpoint >= 1:
         torch.save(model.state_dict(), 'weights/model_weights')
         cptime = time.time()
-    
+
     print("%dm: epoch %d [%s%s]  %d%%  loss = %.3f\nepoch %d complete, loss = %.03f" %\
     ((time.time() - start)//60, epoch + 1, "".join('#'*(100//5)), "".join(' '*(20-(100//5))), 100, avg_loss, epoch + 1, avg_loss))
 
@@ -88,7 +88,7 @@ def main():
   opt.device = 0 if opt.no_cuda is False else -1
   if opt.device == 0: # 0 means GPU is available
     assert torch.cuda.is_available()
-  
+
   read_data(opt)
   SRC, TRG = create_fields(opt)
   opt.train = create_dataset(opt, SRC, TRG)
@@ -105,7 +105,7 @@ def main():
     os.mkdir('weigths')
     pickle.dump(SRC, open('weights/SRC.pkl', 'wb'))
     pickle.dump(TRG, open('weights/TRG.pkl', 'wb'))
-  
+
   train_model(model, opt)
 
   if opt.floyd is False:
@@ -121,7 +121,7 @@ def yesno(response):
 def promptNextAction(model, opt, SRC, TRG):
 
   saved_once = 1 if opt.load_weights is not None or opt.checkpoint > 0 else 0
-  
+
   if opt.load_weights is not None:
     dst = opt.load_weights
   else:
@@ -146,14 +146,14 @@ def promptNextAction(model, opt, SRC, TRG):
                         if res == 'n':
                             continue
                     break
-            
+
             print("saving weights to " + dst + "/...")
             torch.save(model.state_dict(), f'{dst}/model_weights')
             if saved_once == 0:
                 pickle.dump(SRC, open(f'{dst}/SRC.pkl', 'wb'))
                 pickle.dump(TRG, open(f'{dst}/TRG.pkl', 'wb'))
                 saved_once = 1
-            
+
             print("weights and field pickles saved to " + dst)
 
         res = yesno(input("train for more epochs? [y/n] : "))
