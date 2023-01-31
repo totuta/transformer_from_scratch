@@ -20,6 +20,8 @@ def create_masks(src, trg, opt):
     np_mask = nopeak_mask(size, opt)
     if trg.is_cuda:
       np_mask.cuda()
+    if np_mask.is_cuda:
+      trg_mask = trg_mask.cuda()
     trg_mask = trg_mask & np_mask
   else:
     trg_mask = None
