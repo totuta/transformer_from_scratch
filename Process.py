@@ -38,15 +38,16 @@ def create_fields(opt):
   TRG = data.Field(lower=True, tokenize=t_trg.tokenizer, init_token='<sos>', eos_token='<eos>')
   SRC = data.Field(lower=True, tokenize=t_src.tokenizer)
 
+  print(opt.load_weights)
   if opt.load_weights is not None:
     try:
       print("loading presaved fields...")
-      SRC = pickle.load(open(f'{opt.load_weigths}/SRC.pkl', 'rb'))
-      TRG = pickle.load(open(f'{opt.load_weigths}/TRG.pkl', 'rb'))
+      SRC = pickle.load(open(f'{opt.load_weights}/SRC.pkl', 'rb'))
+      TRG = pickle.load(open(f'{opt.load_weights}/TRG.pkl', 'rb'))
     except:
-      print("error opening SRC.pkl and TXT.pkl field files, please ensure they are in " + opt.load_weights + "/")
+      print("error opening SRC.pkl and TRG.pkl field files, please ensure they are in " + opt.load_weights + "/")
       quit()
-  
+
   return(SRC, TRG)
 
 def create_dataset(opt, SRC, TRG):
@@ -67,7 +68,7 @@ def create_dataset(opt, SRC, TRG):
 
   train_iter = MyIterator(train, batch_size=opt.batchsize, device=opt.device,
                           repeat=False, sort_key=lambda x: (len(x.src), len(x.trg)), batch_size_fn=batch_size_fn, train=True, shuffle=True)
-  
+
   os.remove('translate_transformer_temp.csv')
 
   if opt.load_weights is None:
@@ -81,7 +82,7 @@ def create_dataset(opt, SRC, TRG):
         quit()
       pickle.dump(SRC, open('weights/SRC.pkl', 'wb'))
       pickle.dump(TRG, open('weights/TRG.pkl', 'wb'))
-  
+
   opt.src_pad = SRC.vocab.stoi['<pad>']
   opt.trg_pad = TRG.vocab.stoi['<pad>']
 

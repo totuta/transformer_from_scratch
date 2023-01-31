@@ -25,7 +25,7 @@ class PositionalEncoder(nn.Module):
         pe[pos, i+1] = math.cos(pos / (10000 ** ((2 * (i+1))/d_model)))
     pe = pe.unsqueeze(0) # TODO: 이거는 왜 필요한거지
     self.register_buffer('pe', pe) # TODO: nn.Module 의 메소드인 듯
-  
+
   def forward(self, x):
     x = x * math.sqrt(self.d_model) # make embeddings relatively larger
     seq_len = x.size(1)

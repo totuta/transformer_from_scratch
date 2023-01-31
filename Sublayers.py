@@ -31,7 +31,7 @@ def attention(q, k, v, d_k, mask=None, dropout=None):
     scores = dropout(scores)
 
   output = torch.matmul(scores, v)
-  return output  
+  return output
 
 class MultiHeadAttention(nn.Module):
   def __init__(self, heads, d_model, dropout=0.1):
@@ -43,7 +43,7 @@ class MultiHeadAttention(nn.Module):
     self.q_linear = nn.Linear(d_model, d_model)
     self.k_linear = nn.Linear(d_model, d_model)
     self.v_linear = nn.Linear(d_model, d_model)
-    
+
     self.drop_out = nn.Dropout(dropout)
     self.out = nn.Linear(d_model, d_model)
 
@@ -51,7 +51,7 @@ class MultiHeadAttention(nn.Module):
     bs = q.size(0) # 배치 사이즈는 첫 디멘전
 
     # 여기서 -1 은 sequence length 임
-    q = self.q_linear(q).view(bs, -1, self.h, self.d_k)  
+    q = self.q_linear(q).view(bs, -1, self.h, self.d_k)
     k = self.k_linear(k).view(bs, -1, self.h, self.d_k)
     v = self.v_linear(v).view(bs, -1, self.h, self.d_k)
 

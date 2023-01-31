@@ -41,10 +41,10 @@ def train_model(model, opt):
         opt.sched.step()
 
       total_loss += loss.item()
-
+      avg_loss = total_loss/opt.printevery
       if (i + 1) % opt.printevery == 0:
         p = int(100 * (i + 1) / opt.train_len)
-        avg_loss = total_loss/opt.printevery
+        # avg_loss = total_loss/opt.printevery
         if opt.floyd is False:
           print("   %dm: epoch %d [%s%s]  %d%%  loss = %.3f" %\
           ((time.time() - start)//60, epoch + 1, "".join('#'*(p//5)), "".join(' '*(20-(p//5))), p, avg_loss), end='\r')
@@ -53,7 +53,7 @@ def train_model(model, opt):
           ((time.time() - start)//60, epoch + 1, "".join('#'*(p//5)), "".join(' '*(20-(p//5))), p, avg_loss))
         total_loss = 0
 
-      if opt.checkpoint > 0 and ((time.time()-cputime)//60) // opt.checkpoint >= 1:
+      if opt.checkpoint > 0 and ((time.time()-cptime)//60) // opt.checkpoint >= 1:
         torch.save(model.state_dict(), 'weights/model_weights')
         cptime = time.time()
     
