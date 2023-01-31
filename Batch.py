@@ -1,5 +1,6 @@
 import torch
-from torchtext import data
+# from torchtext import data
+from torchtext.legacy import data
 import numpy as np
 from torch.autograd import Variable
 
@@ -10,7 +11,7 @@ def nopeak_mask(size, opt):
     np_mask = np_mask.cuda()
   return np_mask
 
-def create_mask(src, trg, opt):
+def create_masks(src, trg, opt):
   src_mask = (src != opt.src_pad).unsqueeze(-2)
 
   if trg is not None:

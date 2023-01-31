@@ -33,3 +33,4 @@ class PositionalEncoder(nn.Module):
     if x.is_cuda:
       pe.cuda()
     x = x + pe
+    return self.dropout(x)

@@ -32,7 +32,8 @@ class DecoderLayer(nn.Module):
 
     self.attn_1 = MultiHeadAttention(heads, d_model)
     self.attn_2 = MultiHeadAttention(heads, d_model)
-    self.ff = FeedForward(d_model).cuda()
+    self.ff = FeedForward(d_model)
+    # self.ff = FeedForward(d_model).cuda()
 
   def forward(self, x, e_outputs, src_mask, trg_mask):
     x2 = self.norm_1(x)

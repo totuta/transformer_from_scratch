@@ -86,8 +86,8 @@ def main():
   opt = parser.parse_args()
 
   opt.device = 0 if opt.no_cuda is False else -1
-  if opt.device == 0: # 0 은 GPU 가 존재함을 의미
-    assert torch.cude.is_available()
+  if opt.device == 0: # 0 means GPU is available
+    assert torch.cuda.is_available()
   
   read_data(opt)
   SRC, TRG = create_fields(opt)

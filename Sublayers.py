@@ -72,7 +72,7 @@ class MultiHeadAttention(nn.Module):
     # 마지막 피드포워드 네트워크임
 class FeedForward(nn.Module):
   def __init__(self, d_model, d_ff=2048, dropout=0.1):
-    super.__init__()
+    super().__init__()
     self.linear_1 = nn.Linear(d_model, d_ff)
     self.dropout = nn.Dropout(dropout)
     self.linear_2 = nn.Linear(d_ff, d_model)

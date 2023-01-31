@@ -1,6 +1,6 @@
 import pandas as pd
 import torchtext
-from torchtext import data
+from torchtext.legacy import data
 from Tokenize import tokenize
 from Batch import MyIterator, batch_size_fn
 import os
@@ -11,6 +11,13 @@ def read_data(opt):
   if opt.src_data is not None:
     try:
       opt.src_data = open(opt.src_data).read().strip().split('\n')
+    except:
+      print("error: '" + opt.src_data + "' file not found")
+      quit()
+
+  if opt.trg_data is not None:
+    try:
+      opt.trg_data = open(opt.trg_data).read().strip().split('\n')
     except:
       print("error: '" + opt.trg_data + "' file not found")
       quit()
