@@ -31,7 +31,7 @@ def create_fields(opt):
   if opt.trg_lang not in spacy_langs:
     print('invalid src language: ' + opt.trg_lang + 'supported languages : ' + spacy_langs)
 
-  print("loading spacy tokeninzers...")
+  print("loading spacy tokenizers...")
 
   t_src = tokenize(opt.src_lang)
   t_trg = tokenize(opt.trg_lang)
@@ -39,7 +39,6 @@ def create_fields(opt):
   TRG = data.Field(lower=True, tokenize=t_trg.tokenizer, init_token='<sos>', eos_token='<eos>')
   SRC = data.Field(lower=True, tokenize=t_src.tokenizer)
 
-  print(opt.load_weights)
   if opt.load_weights is not None:
     try:
       print("loading presaved fields...")
