@@ -1,5 +1,6 @@
 import pandas as pd
 import torchtext
+# from torchtext import data
 from torchtext.legacy import data
 from Tokenize import tokenize
 from Batch import MyIterator, batch_size_fn
