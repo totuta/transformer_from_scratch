@@ -11,7 +11,7 @@ def init_vars(src, model, SRC, TRG, opt):
     e_output = model.encoder(src, src_mask)
 
     outputs = torch.LongTensor([[init_tok]])
-    if opt.device == 0:
+    if opt.device == torch.device('cuda'):
         outputs = outputs.cuda()
 
     trg_mask = nopeak_mask(1, opt)
@@ -24,13 +24,13 @@ def init_vars(src, model, SRC, TRG, opt):
     log_scores = torch.Tensor([math.log(prob) for prob in probs.data[0]]).unsqueeze(0)
 
     outputs = torch.zeros(opt.k, opt.max_len).long()
-    if opt.device == 0:
+    if opt.device == torch.device('cuda'):
         outputs = outputs.cuda()
     outputs[:, 0] = init_tok
     outputs[:, 1] = ix[0]
 
     e_outputs = torch.zeros(opt.k, e_output.size(-2),e_output.size(-1))
-    if opt.device == 0:
+    if opt.device == torch.device('cuda'):
         e_outputs = e_outputs.cuda()
     e_outputs[:, :] = e_output[0]
 
@@ -85,13 +85,6 @@ def beam_search(src, model, SRC, TRG, opt):
             _, ind = torch.max(log_scores * div, 1)
             ind = ind.data[0]
             break
-
-        # if (outputs==eos_tok).cpu().numpy().argmax(axis=1).nonzero()[0].shape[0]== opt.k:
-        #     alpha = 0.7
-        #     div = 1 / (torch.tensor(((outputs == eos_tok).cpu().numpy().argmax(axis=1))).type_as(log_scores) ** alpha)
-        #     _, ind = torch.max(log_scores * div, 1)
-        #     ind = ind.data[0]
-        #     break
 
     if ind is None:
         length = (outputs[0]==eos_tok).nonzero()[0]

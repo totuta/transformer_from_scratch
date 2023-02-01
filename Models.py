@@ -11,13 +11,13 @@ def get_clones(module, N):
 class Encoder(nn.Module):
   def __init__(self, vocab_size, d_model, N, heads):
     super().__init__()
-    
+
     self.N = N
     self.embed = Embedder(vocab_size, d_model)
     self.pe = PositionalEncoder(d_model)
     self.layers = get_clones(EncoderLayer(d_model, heads), N)
     self.norm = Norm(d_model)
-  
+
   def forward(self, src, mask):
     x = self.embed(src)
     x = self.pe(x)
@@ -68,8 +68,8 @@ def get_model(opt, src_vocab, trg_vocab):
     for p in model.parameters():
       if p.dim() > 1:
         nn.init.xavier_uniform_(p)
-  
-  if opt.device == 0:
+
+  if opt.device == torch.device('cuda'):
     model = model.cuda()
-  
+
   return model
