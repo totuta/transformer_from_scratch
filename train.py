@@ -29,10 +29,10 @@ def train_model(model, opt):
 
       src = batch.src.transpose(0,1)
       trg = batch.trg.transpose(0,1)
-      trg_input = trg[:, :-1] # target input 이기 때문에, 마지막 단어는 안 씀
+      trg_input = trg[:, :-1]
       src_mask, trg_mask = create_masks(src, trg_input, opt)
       preds = model(src, trg_input, src_mask, trg_mask)
-      ys = trg[:, :-1].contiguous().view(-1) # target output 이기 때문에, 첫 단어는 안 씀
+      ys = trg[:,1:].contiguous().view(-1)
       opt.optimizer.zero_grad()
       loss = F.cross_entropy(preds.view(-1, preds.size(-1)), ys, ignore_index=opt.trg_pad)
       loss.backward()
