@@ -85,7 +85,7 @@ def main():
 
     opt = parser.parse_args()
 
-    opt.device = torch.device('cuda') if opt.no_cuda is False else -1
+    opt.device = torch.device('cuda') if opt.no_cuda is False else torch.device('cpu')
     if opt.device == torch.device('cuda'): # 0 means GPU is available
         assert torch.cuda.is_available()
 

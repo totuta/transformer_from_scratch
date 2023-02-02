@@ -64,7 +64,7 @@ def main():
 
   opt = parser.parse_args()
 
-  opt.device = torch.device('cuda') if opt.no_cuda is False else -1
+  opt.device = torch.device('cuda') if opt.no_cuda is False else torch.device('cpu')
 
   assert opt.k > 0
   assert opt.max_len > 10
