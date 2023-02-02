@@ -23,7 +23,7 @@ def train_model(model, opt):
       print(" %dm: epoch %d [%s]  %d%%  loss = %s" % ((time.time() - start)//60, epoch+1, "".join(' '*20), 0, '...'), end='\r')
 
     if opt.checkpoint > 0:
-      torch.save(model.state_dict(), 'weigths/model_weights')
+      torch.save(model.state_dict(), 'weights/model_weights')
 
     for i, batch in enumerate(opt.train):
 
@@ -102,7 +102,7 @@ def main():
     print("model weights will be saved every %d minutes and at end of epoch to directory weights/"%(opt.checkpoint))
 
   if opt.load_weights is not None and opt.floyd is not None:
-    os.mkdir('weigths')
+    os.mkdir('weights')
     pickle.dump(SRC, open('weights/SRC.pkl', 'wb'))
     pickle.dump(TRG, open('weights/TRG.pkl', 'wb'))
 
