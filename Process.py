@@ -29,7 +29,7 @@ def create_fields(opt):
   if opt.src_lang not in spacy_langs:
     print('invalid src language: ' + opt.src_lang + 'supported languages : ' + spacy_langs)
   if opt.trg_lang not in spacy_langs:
-    print('invalid src language: ' + opt.trg_lang + 'supported languages : ' + spacy_langs)
+    print('invalid trg language: ' + opt.trg_lang + 'supported languages : ' + spacy_langs)
 
   print("loading spacy tokenizers...")
 
@@ -78,7 +78,7 @@ def create_dataset(opt, SRC, TRG):
       try:
         os.mkdir("weights")
       except:
-        print("weights folder already exists, run probram with -load_weights weights to load them")
+        print("weights folder already exists, run program with -load_weights weights to load them")
         quit()
       pickle.dump(SRC, open('weights/SRC.pkl', 'wb'))
       pickle.dump(TRG, open('weights/TRG.pkl', 'wb'))
