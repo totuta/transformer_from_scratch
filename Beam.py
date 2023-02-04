@@ -6,43 +6,44 @@ import math
 
 def init_vars(src, model, SRC, TRG, opt):
 
-    init_tok = TRG.vocab.stoi['<sos>'] # the index of <sos> is 2
+    init_tok = TRG.vocab.stoi['<sos>']
     src_mask = (src != SRC.vocab.stoi['<pad>']).unsqueeze(-2) # 1 x 1 x sent_len
     e_output = model.encoder(src, src_mask) # 1 x sent_len x d_model
 
-    outputs = torch.LongTensor([[init_tok]]) # 일단 outputs 은 <sos> 하나만 가지고 시작을 한다는 이야기인 것 같은데?
+    outputs = torch.LongTensor([[init_tok]]) # 일단 outputs 은 <sos> 하나만 가지고 시작
     if opt.device == torch.device('cuda'):
         outputs = outputs.cuda()
 
     trg_mask = nopeak_mask(1, opt) # [[[True]]] : 1 x 1 x 1
 
-    out = model.out(model.decoder(outputs, e_output, src_mask, trg_mask)) # 1 x 1(일단 첫 trg_mask 가 사이즈 1이므로?) x trg_vocab_len
+    out = model.out(model.decoder(outputs, e_output, src_mask, trg_mask)) # 1 x 현재까지 진행된 토큰수 x trg_vocab_len
     out = F.softmax(out, dim=-1) # 형태 그대로 남기고 softmaxing 만 함. argmaxing 은 추가로 해줘야 함
 
     probs, ix = out[:, -1].data.topk(opt.k) # 1 x opt.k 사이즈. [:,-1] 는 차원하나 줄이는 역할. .data 는 없어도 됨. opt.k=3 이므로 top 3 token 의 softmaxed prob 과 indicex(ix) 를 리턴.
     # 지금은 2, 7, 4 가 top 3 인데 각각, <sos>, la, de 임. 아래에서 바로 활용되지만, 이것이 <sos> 바로 다음 토큰의 top 3 임
-    log_scores = torch.Tensor([math.log(prob) for prob in probs.data[0]]).unsqueeze(0) # unsqueeze 하는 것은 shape [3] 을 원래대로 [1, 3] 으로 원복하기 위함
-    # 그리고 log_scores 라기보다는 log_prob 이 더 좋은 명칭
+
+    log_probs = torch.Tensor([math.log(prob) for prob in probs.data[0]]).unsqueeze(0) # unsqueeze 하는 것은 shape [3] 을 원래대로 [1, 3] 으로 원복하기 위함
 
     outputs = torch.zeros(opt.k, opt.max_len).long() # max_len 만큼의 top 3 들을 넣어서 돌려줄 준비
     if opt.device == torch.device('cuda'):
         outputs = outputs.cuda()
     outputs[:, 0] = init_tok # 0번째 토큰의 top 3 는 모두 <sos> 로 고정
-    outputs[:, 1] = ix[0] # 1번째 토큰의 top3 는 바로 위에서 만든 top 3 를 넣음. 근데 지금 <sos> 가 1등이기 때문에, 아마 stuck 될 듯
+    outputs[:, 1] = ix[0] # 1번째 토큰의 top3 는 바로 위에서 src sentence 와 <sos> 를 가지고 만든 첫번째 토큰향 top3 를 넣음
 
     e_outputs = torch.zeros(opt.k, e_output.size(-2), e_output.size(-1)) # e_outputs 는 여기서 처음 만들어짐
     # opt.k x sent_len x d_model
-    # e_output 의 dimension 에서 첫번째 dim 만 opt.k 로 늘린 것
+    # e_output 의 0번 index 를 opt.k 만큼 복제한 것임
     if opt.device == torch.device('cuda'):
         e_outputs = e_outputs.cuda()
-    e_outputs[:, :] = e_output[0] # TODO: 뭐하는 부분이지?
+    e_outputs[:, :] = e_output[0] # TODO: e_output 을 그대로 opt.k 개 복제해서 넣는다?
 
-    return outputs, e_outputs, log_scores # e_outputs 의 역할을 잘 모르겠음s
+    return outputs, e_outputs, log_probs # e_outputs 의 역할을 잘 모르겠음
 
-def k_best_outputs(outputs, out, log_scores, i, k):
+def k_best_outputs(outputs, out, log_probs, i, k):
 
+    # TODO: 여기서 연쇄시켜서 top k 를 뽑는 모양인데..
     probs, ix = out[:, -1].data.topk(k)
-    log_probs = torch.Tensor([math.log(p) for p in probs.data.view(-1)]).view(k, -1) + log_scores.transpose(0,1)
+    log_probs = torch.Tensor([math.log(p) for p in probs.data.view(-1)]).view(k, -1) + log_probs.transpose(0,1)
     k_probs, k_ix = log_probs.view(-1).topk(k)
 
     row = k_ix // k
@@ -51,13 +52,13 @@ def k_best_outputs(outputs, out, log_scores, i, k):
     outputs[:, :i] = outputs[row, :i]
     outputs[:, i] = ix[row, col]
 
-    log_scores = k_probs.unsqueeze(0)
+    log_probs = k_probs.unsqueeze(0)
 
-    return outputs, log_scores
+    return outputs, log_probs
 
-def beam_search(src, model, SRC, TRG, opt): # 아휴 여기서 이름을 src 로 바꽈놓으니 가독성이 떨어지지
+def beam_search(src, model, SRC, TRG, opt):
 
-    outputs, e_outputs, log_scores = init_vars(src, model, SRC, TRG, opt)
+    outputs, e_outputs, log_probs = init_vars(src, model, SRC, TRG, opt) # 빔 서치를 하기 위한 사전 준비. 텐서 틀등도 준비하고
     eos_tok = TRG.vocab.stoi['<eos>']
     src_mask = (src != SRC.vocab.stoi['<pad>']).unsqueeze(-2) # init_vars 내부에서 만들어 썼던 것과 같음
     ind = None
@@ -70,7 +71,7 @@ def beam_search(src, model, SRC, TRG, opt): # 아휴 여기서 이름을 src 로
 
         out = F.softmax(out, dim=-1) # 이것도 dimension 은 그대로 두고서 softmaxing 만 함
 
-        outputs, log_scores = k_best_outputs(outputs, out, log_scores, i, opt.k)
+        outputs, log_probs = k_best_outputs(outputs, out, log_probs, i, opt.k)
 
         ones = (outputs==eos_tok).nonzero() # Occurrences of end symbols for all input sentences.
         # 일단은 eos 가 안나오고 있음
@@ -84,8 +85,8 @@ def beam_search(src, model, SRC, TRG, opt): # 아휴 여기서 이름을 src 로
 
         if num_finished_sentences == opt.k:
             alpha = 0.7
-            div = 1/(sentence_lengths.type_as(log_scores)**alpha)
-            _, ind = torch.max(log_scores * div, 1)
+            div = 1/(sentence_lengths.type_as(log_probs)**alpha)
+            _, ind = torch.max(log_probs * div, 1)
             ind = ind.data[0]
             break
 

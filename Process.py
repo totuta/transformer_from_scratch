@@ -45,6 +45,7 @@ def create_fields(opt):
             SRC = pickle.load(open(f'{opt.load_weights}/SRC.pkl', 'rb'))
             TRG = pickle.load(open(f'{opt.load_weights}/TRG.pkl', 'rb'))
         except:
+            # TODO: the Field objects are not compatible when trained on different dependencies. Need to fix this
             print("error opening SRC.pkl and TRG.pkl field files, please ensure they are in " + opt.load_weights + "/")
             quit()
 

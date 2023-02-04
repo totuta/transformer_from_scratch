@@ -50,6 +50,8 @@ class Transformer(nn.Module):
         self.out = nn.Linear(d_model, trg_vocab_len)
 
     def forward(self, src, trg, src_mask, trg_mask):
+        # 특이한 것은 model.encoder(), model.decoder(), model.out() 의 형태로 이거를 직접 꺼내서 쓴다는 것
+        # Transformer 의 Encoder 와 Decoder 멤버 펑션을 따로 정의해두지 않았음
         e_outputs = self.encoder(src, src_mask)
         d_output = self.decoder(trg, e_outputs, src_mask, trg_mask)
         output = self.out(d_output)

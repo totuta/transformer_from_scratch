@@ -16,7 +16,6 @@ def get_synonym(word, SRC):
     return 0
 
 def multiple_replace(dict, text):
-    # TODO: 어디에 쓰는 것인지 이해해야 함
     regex = re.compile("(%s)" % "|".join(map(re.escape, dict.keys())))
     return regex.sub(lambda mo: dict[mo.string[mo.start():mo.end()]], text)
 
@@ -25,7 +24,7 @@ def translate_sentence(sentence, model, opt, SRC, TRG):
     indexed = []
     sentence = SRC.preprocess(sentence)
     for tok in sentence:
-        if SRC.vocab.stoi[tok] != 0 or opt.floyd == True:
+        if SRC.vocab.stoi[tok] != 0 or opt.floyd == True: # TODO: remove all floyd related parts
             indexed.append(SRC.vocab.stoi[tok])
         else:
             indexed.append(get_synonym(tok, SRC))
@@ -42,7 +41,6 @@ def translate(opt, model, SRC, TRG):
     translated = []
 
     for sentence in sentences:
-        # TODO: 마지막에 점은 꼭 필요한 모양?
         translated.append(translate_sentence(sentence + '.', model, opt, SRC, TRG).capitalize())
 
     return (' '.join(translated))
