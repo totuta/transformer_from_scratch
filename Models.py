@@ -43,11 +43,11 @@ class Decoder(nn.Module):
         return self.norm(x)
 
 class Transformer(nn.Module):
-    def __init__(self, src_vocab, trg_vocab, d_model, N, heads, dropout):
+    def __init__(self, src_vocab_len, trg_vocab_len, d_model, N, heads, dropout):
         super().__init__()
-        self.encoder = Encoder(src_vocab, d_model, N, heads, dropout)
-        self.decoder = Decoder(trg_vocab, d_model, N, heads, dropout)
-        self.out = nn.Linear(d_model, trg_vocab)
+        self.encoder = Encoder(src_vocab_len, d_model, N, heads, dropout)
+        self.decoder = Decoder(trg_vocab_len, d_model, N, heads, dropout)
+        self.out = nn.Linear(d_model, trg_vocab_len)
 
     def forward(self, src, trg, src_mask, trg_mask):
         e_outputs = self.encoder(src, src_mask)
@@ -55,11 +55,11 @@ class Transformer(nn.Module):
         output = self.out(d_output)
         return output
 
-def get_model(opt, src_vocab, trg_vocab):
+def get_model(opt, src_vocab_len, trg_vocab_len):
     assert opt.d_model % opt.heads == 0
     assert opt.dropout < 1
 
-    model = Transformer(src_vocab, trg_vocab, opt.d_model, opt.n_layers, opt.heads, opt.dropout)
+    model = Transformer(src_vocab_len, trg_vocab_len, opt.d_model, opt.n_layers, opt.heads, opt.dropout)
 
     if opt.load_weights is not None:
         print("loading pretrained weights...")
