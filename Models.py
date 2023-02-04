@@ -5,48 +5,48 @@ from Embed import Embedder, PositionalEncoder
 from Sublayers import Norm
 import copy
 
-def get_clones(module, N):
-    return nn.ModuleList([copy.deepcopy(module) for i in range(N)])
+def get_clones(module, n_layers):
+    return nn.ModuleList([copy.deepcopy(module) for i in range(n_layers)])
 
 class Encoder(nn.Module):
-    def __init__(self, vocab_size, d_model, N, heads, dropout):
+    def __init__(self, vocab_size, d_model, n_layers, heads, dropout):
         super().__init__()
 
-        self.N = N
+        self.n_layers = n_layers
         self.embed = Embedder(vocab_size, d_model)
         self.pe = PositionalEncoder(d_model, dropout=dropout)
-        self.layers = get_clones(EncoderLayer(d_model, heads, dropout), N)
+        self.layers = get_clones(EncoderLayer(d_model, heads, dropout), n_layers)
         self.norm = Norm(d_model)
 
     def forward(self, src, mask):
         x = self.embed(src)
         x = self.pe(x)
-        for i in range(self.N):
+        for i in range(self.n_layers):
             x = self.layers[i](x, mask)
         return self.norm(x)
 
 class Decoder(nn.Module):
-    def __init__(self, vocab_size, d_model, N, heads, dropout):
+    def __init__(self, vocab_size, d_model, n_layers, heads, dropout):
         super().__init__()
 
-        self.N = N
+        self.n_layers = n_layers
         self.embed = Embedder(vocab_size, d_model)
         self.pe = PositionalEncoder(d_model, dropout=dropout)
-        self.layers = get_clones(DecoderLayer(d_model, heads, dropout), N)
+        self.layers = get_clones(DecoderLayer(d_model, heads, dropout), n_layers)
         self.norm = Norm(d_model)
 
     def forward(self, trg, e_outputs, src_mask, trg_mask):
         x = self.embed(trg)
         x = self.pe(x)
-        for i in range(self.N):
+        for i in range(self.n_layers):
             x = self.layers[i](x, e_outputs, src_mask, trg_mask)
         return self.norm(x)
 
 class Transformer(nn.Module):
-    def __init__(self, src_vocab_len, trg_vocab_len, d_model, N, heads, dropout):
+    def __init__(self, src_vocab_len, trg_vocab_len, d_model, n_layers, heads, dropout):
         super().__init__()
-        self.encoder = Encoder(src_vocab_len, d_model, N, heads, dropout)
-        self.decoder = Decoder(trg_vocab_len, d_model, N, heads, dropout)
+        self.encoder = Encoder(src_vocab_len, d_model, n_layers, heads, dropout)
+        self.decoder = Decoder(trg_vocab_len, d_model, n_layers, heads, dropout)
         self.out = nn.Linear(d_model, trg_vocab_len)
 
     def forward(self, src, trg, src_mask, trg_mask):
