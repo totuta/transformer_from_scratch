@@ -28,7 +28,7 @@ def init_vars(src, model, SRC, TRG, opt):
     outputs = torch.zeros(opt.k, opt.max_len).long() # k x maxlen 형태로 0을 채움
     if opt.device == torch.device('cuda'):
         outputs = outputs.cuda()
-    outputs[:, 0] = init_tok # 0번째 토큰의 top 3 는 모두 <sos> 로 고정
+    outputs[:, 0] = init_tok # 0번째 토큰의 top 3 는 모두 <sos> 로 고정. broadcast
     outputs[:, 1] = ix[0] # 1번째 토큰의 top3 는 바로 위에서 src sentence 와 <sos> 를 가지고 만든 첫번째 토큰향 top3 를 넣음
     # outputs 을 0th, 1st 까지 opt.k 개를 채워서 내보낼 준비
 
@@ -89,9 +89,9 @@ def beam_search(src, model, SRC, TRG, opt):
         # log_probs 도 최신 top k 에 대한 것으로 업데이트 될 것
         outputs, log_probs = k_best_outputs(outputs, out, log_probs, i, opt.k)
 
-        ones = (outputs==eos_tok).nonzero() # Occurrences of end symbols for all input sentences. .nonzero() 는 True 인 값들의 좌표들의 리스트를 리턴. 참..ones 라는 이름 정말 혼동 유발한다
+        eoses = (outputs==eos_tok).nonzero() # Occurrences of end symbols for all input sentences.
         sentence_lengths = torch.zeros(len(outputs), dtype=torch.long) # TODO: 이건 뭐지?
-        for vec in ones:
+        for vec in eoses:
             i = vec[0] # k 개 중에서 몇번째인지
             if sentence_lengths[i]==0: # First end symbol has not been found yet
                 sentence_lengths[i] = vec[1] # Position of first end symbol
@@ -102,7 +102,7 @@ def beam_search(src, model, SRC, TRG, opt):
             alpha = 0.7
             div = 1/(sentence_lengths.type_as(log_probs)**alpha) # log_probs 와 타입을 맞춤
             _, ind = torch.max(log_probs * div, 1) # 몇번째 문장이 베스트인지 찾아서 idx 에 넣음. 확률 그 자체(_) 는 안 씀
-            ind = ind.data[0] # 스칼라값으로 뺴줌
+            ind = ind.data[0] # 스칼라값으로 빼줌
             break
 
     if ind is None:
