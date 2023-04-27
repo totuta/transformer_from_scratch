@@ -18,18 +18,22 @@ class Norm(nn.Module):
         return norm
 
 def attention(q, k, v, d_k, mask=None, dropout=None):
-    # TODO: Check why .transpose(-2,-1)
+    # why .transpose(-2,-1)
+    #  --> seq_len_q * d_model_per_head X d_model_per_head * seq_len_k 으로 만들어서 곱하기 위하여
     scores = torch.matmul(q, k.transpose(-2,-1))/math.sqrt(d_k)
+    # scores 의 dimension 은 n_batch * head * seq_len_q * seq_len_k 가 됨
 
     if mask is not None:
         mask = mask.unsqueeze(1)
         scores = scores.masked_fill(mask == 0, -1e9) # if mask value is 0, then the negative infinite
 
-    scores = F.softmax(scores, dim=-1)
+    scores = F.softmax(scores, dim=-1) # seq_len_k 에 대해서 softmax 를 취함
 
     if dropout is not None:
         scores = dropout(scores)
 
+    # n_batch * head * seq_len_q * seq_len_k X n_batch * head * seq_len_k * d_model_per_head
+    # --> n_batch * head * seq_len_q * d_model_per_head
     output = torch.matmul(scores, v)
     return output
 
@@ -45,7 +49,7 @@ class MultiHeadAttention(nn.Module):
         self.v_linear = nn.Linear(d_model, d_model)
 
         self.dropout = nn.Dropout(dropout)
-        self.out = nn.Linear(d_model, d_model)
+        self.out = nn.Linear(d_model, d_model) # out matrix 가 따로 있다는 사실을 기억해야 함
 
     def forward(self, q, k, v, mask=None):
         bs = q.size(0) # 배치 사이즈는 첫 디멘전
@@ -60,12 +64,12 @@ class MultiHeadAttention(nn.Module):
         k = k.transpose(1,2)
         v = v.transpose(1,2)
 
-        # TODO: attention 이 왜 갑자기 나와?
         scores = attention(q, k, v, self.d_k, mask, self.dropout)
         # .contiguous() 는 메모리상에서 연속적으로 배열되게 한다고 함
+        # 마지막 두 dimension, 즉 self.h 와 self.d_k 를 하나로 합쳐서 self.d_model 이 되도록 함
         concat = scores.transpose(1,2).contiguous().view(bs,-1,self.d_model)
 
-        output = self.out(concat)
+        output = self.out(concat) # 마지막 차원인 d_model 에 대해서만 linear transformation 을 수행함
 
         return output
 
