@@ -35,6 +35,7 @@ def train_model(model, opt):
             ys = trg[:,1:].contiguous().view(-1)
             opt.optimizer.zero_grad()
             loss = F.cross_entropy(preds.view(-1, preds.size(-1)), ys, ignore_index=opt.trg_pad)
+            # 만약에 여기에 새로운 unigram distribution 으로부터 weight 을 넣으려고 한다면, weight parameter 를 사용하면 될 것
             loss.backward()
             opt.optimizer.step()
             if opt.SGDR == True:
@@ -92,7 +93,7 @@ def main():
     read_data(opt)
     SRC, TRG = create_fields(opt)
     opt.train = create_dataset(opt, SRC, TRG)
-    model = get_model(opt, len(SRC.vocab), len(TRG.vocab))
+    model = get_model(opt, len(SRC.vocab), len(TRG.vocab)) # 보통 get_model() 이라는 이름을 붙이는 모양
 
     opt.optimizer = torch.optim.Adam(model.parameters(), lr=opt.lr, betas=(0.9, 0.98), eps=1e-9)
     if opt.SGDR == True:

@@ -13,7 +13,7 @@ class Encoder(nn.Module):
         super().__init__()
 
         self.n_layers = n_layers
-        self.embed = Embedder(vocab_size, d_model)
+        self.embed = Embedder(vocab_size, d_model) # TODO: 여기서 BPE 적용하려면?
         self.pe = PositionalEncoder(d_model, dropout=dropout)
         self.layers = get_clones(EncoderLayer(d_model, heads, dropout), n_layers)
         self.norm = Norm(d_model)
